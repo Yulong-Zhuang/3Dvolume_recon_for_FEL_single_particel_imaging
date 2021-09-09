@@ -139,14 +139,17 @@ class VAEReconstructor():
         for epoch in range(self.n_epochs):
             mu_all_0 = np.zeros((1, self.z_dim))
             logvar_all_0 = np.zeros((1, self.z_dim))
+            arr = np.arange(self.preproc.intens.shape[0])
+            training_intens_r = self.preproc.intens[arr]
+            rotation_sq_r_r = self.preproc.rotation_sq_r[arr]
 
-            for i in range(self.preproc.intens.shape[0] // self.batch_size):
+            for i in range(training_intens_r.shape[0] // self.batch_size):
                 # Local batches and labels
-                intens_batch = self.preproc.intens[i*self.batch_size:(i+1)*self.batch_size]
+                intens_batch = training_intens_r[i*self.batch_size:(i+1)*self.batch_size]
                 images = torch.from_numpy(intens_batch).view(self.batch_size, 1, intensize, intensize)
                 images = images.float().to(self.device)
 
-                ori_batch = self.preproc.rotation_sq_r[i*self.batch_size:(i+1)*self.batch_size]
+                ori_batch = rotation_sq_r_r[i*self.batch_size:(i+1)*self.batch_size]
                 ori = torch.from_numpy(ori_batch).view(self.batch_size, 5)
                 ori = ori.float().to(self.device)
 
