@@ -128,8 +128,8 @@ class VAEReconstructor():
 
         BCE = functional.binary_cross_entropy(recon_x, x, reduction='sum')
         BSE = torch.sum((recon_x - x)**2)
-        KLD = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
-        return BCE + KLD + BSE, BCE, BSE, KLD, recon_x
+        REG = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
+        return BCE + REG + BSE, BCE, BSE, REG, recon_x
 
     def train(self):
         print('Start training')
@@ -154,7 +154,7 @@ class VAEReconstructor():
                 ori = ori.float().to(self.device)
 
                 recon_images, mu, logvar = self.model([images, ori])
-                loss, bce, bse, kld, recon_2D_x = self.loss_function(recon_images, images,
+                loss, bce, bse, reg, recon_2D_x = self.loss_function(recon_images, images,
                                                                      mu, logvar, i)
 
                 if (epoch == self.n_epochs - 1):
@@ -169,7 +169,7 @@ class VAEReconstructor():
                 if i%100 == 0:
                     to_print = "Epoch[{}/{}] Loss: {:.3f} {:.3f} {:.3f} {:.3f}".format(epoch+1,
                                             self.n_epochs, loss.data.item(),
-                                            bce.data.item(), bse.data.item(), kld.data.item())
+                                            bce.data.item(), bse.data.item(), reg.data.item())
                     print(to_print)
 
         torch.save(self.model.module.state_dict(), self.output_folder + '/Vae_CNN3D_dict')
@@ -200,7 +200,7 @@ class VAEReconstructor():
             ori = torch.from_numpy(ori_batch).view(self.batch_size, 5)
             ori = ori.float().to(self.device)
             recon_images, mu, logvar = self.model([images, ori])
-            loss, bce, bse, kld, recon_2D_x = self.loss_function(recon_images, images,
+            loss, bce, bse, reg, recon_2D_x = self.loss_function(recon_images, images,
                                                                  mu, logvar, i)
 
             mu_all_0 = np.concatenate((mu_all_0, mu.detach().cpu().clone().numpy()),axis=0)
@@ -214,7 +214,7 @@ class VAEReconstructor():
                 print("Batch[{}/{}] Loss: {:.3f} {:.3f} {:.3f} {:.3f}".format(i*self.batch_size,
                                         10000, loss.data.item(),
                                         bce.data.item(), bse.data.item(),
-                                        kld.data.item()))
+                                        reg.data.item()))
 
         mu_all = mu_all_0[1:,:]
         logvar_all = logvar_all_0[1:,:]
