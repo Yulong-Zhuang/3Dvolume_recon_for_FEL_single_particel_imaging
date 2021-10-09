@@ -127,7 +127,7 @@ class VAEReconstructor():
             recon_x[i] = recon_x_i
 
         BCE = functional.binary_cross_entropy(recon_x, x, reduction='sum')
-        BSE = torch.sum((recon_x - x)**2)
+        BSE = torch.sum((recon_x - x)**2)/(self.batch_size*x.shape[-1]**2)
         REG = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
         return BCE + REG + BSE, BCE, BSE, REG, recon_x
 
